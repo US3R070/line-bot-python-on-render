@@ -12,10 +12,9 @@ app = Flask(__name__)
 
 line_bot_api = LineBotApi('Dv/jLTe9Hjfv29yLkOKmE3NsPmGQQhPP6Hj+CfzoN716mEEpOokXfe/n8TE+s3ZImeimsF6Lf4neUNbmXIX65b7oMsHc0YWJte3dOZbLz/GXlpDDKEwjp0vRAc0ueLhf5sYNk3bss7/dLRqCx+v8JQdB04t89/1O/w1cDnyilFU=')
 
-handler = WebhookHandler(641700cfc7bd588430948046b6c3c9a8)
+handler = WebhookHandler('641700cfc7bd588430948046b6c3c9a8')
 
-line_bot_api.push_message('
-U0b55f1fefdcf18168b0c8c515701a585', TextSendMessage(text='你可以開始了'))
+line_bot_api.push_message('U0b55f1fefdcf18168b0c8c515701a585', TextSendMessage(text='你可以開始了'))
 
 
 
