@@ -37,8 +37,9 @@ def handle_message(event):
     message = TextSendMessage(text=event.message.text)
     
     if (message == "123") :
-        message = "¨ş¨ş¨ş"
+        message = 'å‘µå‘µå‘µ'
     
+    text = ''
     line_bot_api.reply_message(event.reply_token,message)
     
 
