@@ -35,6 +35,7 @@ def callback():
 
 def handle_message(event):
     message = TextSendMessage(text=event.message.text)
+    
     if (message == "§Ú¬O©÷à±") :
         message = "¨ş¨ş¨ş"
     line_bot_api.reply_message(event.reply_token,message)
