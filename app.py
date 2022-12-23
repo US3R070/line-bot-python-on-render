@@ -14,6 +14,7 @@ line_bot_api = LineBotApi('Dv/jLTe9Hjfv29yLkOKmE3NsPmGQQhPP6Hj+CfzoN716mEEpOokXf
 
 handler = WebhookHandler('641700cfc7bd588430948046b6c3c9a8')
 
+line_bot_api.push_message('U0b55f1fefdcf18168b0c8c515701a585', TextSendMessage(text='Successfully deployed'))
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -39,11 +40,7 @@ def handle_message(event):
     if (message == "123") :
         message = '呵呵呵'
     
-    text = ''
     line_bot_api.reply_message(event.reply_token,message)
-    
-
-    
 
 
 import os
