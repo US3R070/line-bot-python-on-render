@@ -35,7 +35,7 @@ def callback():
 
 def handle_message(event):
     message = TextSendMessage(text=event.message.text)
-    if (message.find("我是昌鈺", beg=0, end=len(message)!= -1)) :
+    if (message == "我是昌鈺") :
         message = "呵呵呵"
     line_bot_api.reply_message(event.reply_token,message)
     
