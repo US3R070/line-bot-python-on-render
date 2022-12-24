@@ -37,10 +37,12 @@ def callback():
 def handle_message(event):
     message = TextSendMessage(text=event.message.text)
     
-    if (event.message.text == "123") :
-        event.message.text = '呵呵呵'
+    if(event.message.text == "123"):
+        line_bot_api.reply_message(event.reply_token,{type:'text', text: '呵呵呵' })
+        
+    line_bot_api.reply_message(event.reply_token,event.message.text)
     
-    line_bot_api.reply_message(event.reply_token,message)
+    
 
 
 import os
