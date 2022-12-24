@@ -42,7 +42,7 @@ def handle_message(event):
     global state
     message = TextSendMessage(text=event.message.text)
     
-    if(re.match('switch state',message)):
+    if(event.message.text == 'switch state'):
         state = 1273
         reply = TextSendMessage(text=str(state))
         line_bot_api.reply_message(event.reply_token,reply)
