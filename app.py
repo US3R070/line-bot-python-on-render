@@ -116,7 +116,7 @@ def handle_message(event):
         reply = TextSendMessage(text = '沒有這個指令，若要查詢可以輸入「指令」')
         line_bot_api.reply_message(event.reply_token,reply)
     
-def state_manager():
+#def state_manager():
     
 
 
