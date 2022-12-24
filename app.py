@@ -1,5 +1,8 @@
 from flask import Flask, request, abort
 import json
+import re
+
+state = 0
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -36,14 +39,15 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 
 def handle_message(event):
+    global state
     message = TextSendMessage(text=event.message.text)
     
-    if(event.message.text == "123"):
-        reply = TextSendMessage(text='呵呵呵')
+    if(re.match('switch state',message)):
+        state = 1273
+        reply = TextSendMessage(text=str(state))
         line_bot_api.reply_message(event.reply_token,reply)
-        
-    line_bot_api.reply_message(event.reply_token,event.message.text)
-    
+    else :
+        line_bot_api.reply_message(event.reply_token,message)
     
 
 
