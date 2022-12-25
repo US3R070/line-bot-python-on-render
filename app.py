@@ -27,9 +27,9 @@ search_board = ''
 
 search_page = 0
 
-delete_reply = TextSendMessage(text = '請輸入要從選單移除的看板\n[Ex]:NBA,Gossiping...')
+delete_reply = TextSendMessage(text = '請輸入要從選單移除的看板\n[Ex]:NBA,Gossiping,Stock...')
 
-join_reply = TextSendMessage(text = '請輸入要加到選單的看板\n[Ex]:NBA,Gossiping...')
+join_reply = TextSendMessage(text = '請輸入要加到選單的看板\n[Ex]:NBA,Gossiping,Stock...')
 
 please_return_reply = TextSendMessage(text = '若要輸入其他指令，請先輸入「算了」放棄當前工作')
 
@@ -43,7 +43,7 @@ url_dict = {'C_Chat':'https://www.ptt.cc/bbs/C_Chat/index.html'}
 
 user_columns = [
                     CarouselColumn(
-                        thumbnail_image_url='https://imgur.com/gR9omvH',
+                        thumbnail_image_url='https://i.imgur.com/PpLDWf8.png?2',
                         title='C_Chat',
                         text='C_Chat',
                         actions=[
@@ -55,196 +55,15 @@ user_columns = [
                             URIAction(
                                 label='跳到該看板',
                                 uri='https://www.ptt.cc/bbs/C_Chat/index.html'
-                            )
+                            ),
+                                        MessageAction
+                                        (
+                                            label='返回主選單',
+                                            text= '算了'
+                                        )
                         ]
                     )
                 ]
-
-def add(event):
-    global state
-    global user_columns
-    text = event.message.text
-    url = 'https://www.ptt.cc/bbs/hotboards.html'
-    
-    if (text == '算了'):
-        state = 0
-        line_bot_api.reply_message(event.reply_token,discard_reply)
-    elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
-        line_bot_api.reply_message(event.reply_token,please_return_reply)
-    else :
-        res = requests.get(url,headers = headers,cookies={'over18':'1'})
-        soup = bs(res.text,"html.parser")
-        data = soup.select("div.b-ent")
-        for ele in data :
-            board_name = ele.select("div.board-name")[0].text
-            if (text == board_name):
-                board_url = 'https://www.ptt.cc' + ele.select("a.board")[0]["href"]
-                url_dict[board_name] = board_url
-                to_add = CarouselColumn(
-                                    thumbnail_image_url='https://imgur.com/gR9omvH',
-                                    title=text,
-                                    text=ele.select("div.board-title")[0].text,
-                                    actions=
-                                    [
-                                        MessageAction
-                                        (
-                                            label='功能表',
-                                            text= text + ' ' + '功能表'
-                                        ),
-                                        URIAction
-                                        (
-                                            label='跳到該看板',
-                                            uri= board_url
-                                        )
-                                    ]
-                                    )
-                user_columns.append(to_add)
-                state = 0
-                join_success = TextSendMessage(text = '成功加入 ' + text + ' 至選單中')
-                line_bot_api.reply_message(event.reply_token,join_success)
-        join_fail = TextSendMessage(text = '沒有這個看板ㄛ，請再輸入一次')
-        line_bot_api.reply_message(event.reply_token,join_fail)
-            
-
-def delete(event):
-    global state
-    text = event.message.text
-    if (text == '算了'):
-        state = 0
-        line_bot_api.reply_message(event.reply_token,discard_reply)
-    elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
-        line_bot_api.reply_message(event.reply_token,please_return_reply)
-    else :
-        for board in user_columns:
-            if (board.title == text):
-                state = 0
-                user_columns.remove(board)
-                del_success_reply = TextSendMessage('成功從選單中移除 ' + text)
-                line_bot_api.reply_message(event.reply_token,del_success_reply)
-        del_fail_reply = TextSendMessage('選單中沒有這個看板ㄛ，請重新輸入 ' + text)
-        line_bot_api.reply_message(event.reply_token,del_fail_reply)
-
-def Carousel_reply_handle(event):
-    global state
-    text = event.message.text
-    textlist = text.split()
-    if (text == '算了'):
-        state = 0
-        line_bot_api.reply_message(event.reply_token,discard_reply)
-    elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
-        line_bot_api.reply_message(event.reply_token,please_return_reply)
-    elif (textlist[1] == '功能表'):
-        buttons_template_message = TemplateSendMessage(
-                alt_text='功能表',
-                template=ButtonsTemplate(
-                    title='功能表',
-                    text=textlist[0] + '版功能表',
-                    actions=[
-                        MessageAction(
-                            label='熱門文章',
-                            text= textlist[0] + ' ' +'版熱門文章'
-                        ),
-                        MessageAction(
-                            label='搜尋標籤',
-                            text= textlist[0] + ' ' +'版搜尋標籤'
-                        ),
-                        MessageAction(
-                            label='搜尋關鍵字',
-                            text= textlist[0] + ' ' +'版搜尋關鍵字'
-                        ),
-                        MessageAction(
-                            label='返回選單',
-                            text= '算了'
-                        ),
-                    ]
-                )
-            )
-        state = 4
-        line_bot_api.reply_message(event.reply_token, buttons_template_message)
-        
-def searchhandler(event):
-    global state
-    global search_page
-    global search_board
-    text = event.message.text
-    
-    if (text == '算了'):
-        state = 0
-        line_bot_api.reply_message(event.reply_token,discard_reply)
-    else :
-        search_list = ''
-        count = 1
-        for i in range (0,10,1):
-            uurl = 'https://www.ptt.cc/bbs/' + search_board + '/index' + str(search_page-i) + '.html'
-            res = requests.get(uurl,headers = headers,cookies={'over18':'1'})
-            soup = bs(res.text,"html.parser")
-            datanum = soup.select("div.r-ent")
-            for ele in datanum:
-                num_recv = ele.select("div.nrec")[0].text
-                title = ele.select("div.title")[0].text.strip()
-                if title.__contains__(text):
-                    search_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
-                    count +=1
-        if (search_list != ''): 
-            search_reply = TextSendMessage(text = search_list)
-            line_bot_api.reply_message(event.reply_token,search_reply)
-        else :
-            reply = TextSendMessage(text = '在 ' + search_board +' 版上找不到含有「 '+text+' 」的文章，請輸入另外的關鍵字' )
-            line_bot_api.reply_message(event.reply_token,reply)
-
-        
-def menuhandler(event):
-    global state
-    global search_page
-    global search_board
-    text = event.message.text
-    textlist = text.split()
-    
-    if (url_dict.get(textlist[0])!=None):
-
-        url = url_dict[textlist[0]]
-        res = requests.get(url,headers = headers)
-        soup = bs(res.text,"html.parser")
-        datanum = soup.select("div.r-ent")
-        data = soup.select("div.action-bar")
-
-        for ele in data :
-            d = ele.select("div.btn-group.btn-group-paging")
-            for k in d:
-                f = k.select("a.btn.wide")[1]["href"]
-                ret = int(re.findall(r"\d+",f)[0])
-
-        if (textlist[1] == '版熱門文章'):
-            hot_list = ''
-            count = 1
-            for i in range (0,10,1):
-                uurl = 'https://www.ptt.cc/bbs/' + textlist[0] + '/index' + str(ret-i) + '.html'
-                res = requests.get(uurl,headers = headers,cookies={'over18':'1'})
-                soup = bs(res.text,"html.parser")
-                datanum = soup.select("div.r-ent")
-                for ele in datanum:
-                    num_recv = ele.select("div.nrec")[0].text
-                    if (num_recv != '' and num_recv[0] != 'X' and (num_recv == '爆' or int(num_recv) > 40) and len(hot_list)< 4900):
-                        hot_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
-                        count +=1
-            hot_reply = TextSendMessage(text = hot_list)
-            line_bot_api.reply_message(event.reply_token,hot_reply)
-        
-        elif (textlist[1] == '版搜尋標籤'):
-            for ele in data:
-                a = 1
-        
-        elif (textlist[1] == '版搜尋關鍵字'):
-            state = 5
-            search_board = textlist[0]
-            search_page = ret
-            
-            
-    elif(textlist[0] == '算了'):
-        state = 0
-        line_bot_api.reply_message(event.reply_token,discard_reply)
-    else:
-        line_bot_api.reply_message(event.reply_token,please_return_reply)
         
 state = 0
 
@@ -265,14 +84,13 @@ def callback():
     return 'OK'
 
 @handler.add(MessageEvent, message=TextMessage)
-
 def handle_message(event):
     global state
     
     text = event.message.text
     
     if event.source.user_id == "U0b55f1fefdcf18168b0c8c515701a585":
-        print(event.message.text)
+        print(event.message.text, state,event.timestamp)
 
     if (state == 0):
         if (text == '列表' and user_columns != []):
@@ -308,9 +126,233 @@ def handle_message(event):
         menuhandler(event)
     elif(state == 5):
         searchhandler(event)
-    
 
+    
+    return
+
+def add(event):
+    global state
+    global user_columns
+    text = event.message.text
+    url = 'https://www.ptt.cc/bbs/hotboards.html'
+
+    if (state == 2):
+        if (text == '算了'):
+            state = 0
+            line_bot_api.reply_message(event.reply_token,discard_reply)
+        elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
+            line_bot_api.reply_message(event.reply_token,please_return_reply)
+        else :
+            res = requests.get(url,headers = headers,cookies={'over18':'1'})
+            soup = bs(res.text,"html.parser")
+            data = soup.select("div.b-ent")
+            for ele in data :
+                board_name = ele.select("div.board-name")[0].text
+                if (text == board_name):
+                    board_url = 'https://www.ptt.cc' + ele.select("a.board")[0]["href"]
+                    url_dict[board_name] = board_url
+                    to_add = CarouselColumn(
+                                        thumbnail_image_url='https://i.imgur.com/PpLDWf8.png?2',
+                                        title=text,
+                                        text=ele.select("div.board-title")[0].text,
+                                        actions=
+                                        [
+                                            MessageAction
+                                            (
+                                                label='功能表',
+                                                text= text + ' ' + '功能表'
+                                            ),
+                                            URIAction
+                                            (
+                                                label='跳到該看板',
+                                                uri= board_url
+                                            ),
+                                            MessageAction
+                                            (
+                                                label='返回主選單',
+                                                text= '算了'
+                                            )
+                                        ]
+                                        )
+                    user_columns.append(to_add)
+                    state = 0
+                    join_success = TextSendMessage(text = '成功加入 ' + text + ' 至選單中')
+                    line_bot_api.reply_message(event.reply_token,join_success)
+                    return
+            
+            join_fail = TextSendMessage(text = '沒有這個看板ㄛ，請再輸入一次')
+            line_bot_api.reply_message(event.reply_token,join_fail)
+    return
+            
+def delete(event):
+    global state
+    text = event.message.text
+    if (state == 3):
+        if (text == '算了'):
+            state = 0
+            line_bot_api.reply_message(event.reply_token,discard_reply)
+        elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
+            line_bot_api.reply_message(event.reply_token,please_return_reply)
+        else :
+            for board in user_columns:
+                if (board.title == text):
+                    state = 0
+                    user_columns.remove(board)
+                    del_success_reply = TextSendMessage('成功從選單中移除 ' + text)
+                    line_bot_api.reply_message(event.reply_token,del_success_reply)
+                    return
+            
+            del_fail_reply = TextSendMessage('選單中沒有這個看板ㄛ，請重新輸入 ' + text)
+            line_bot_api.reply_message(event.reply_token,del_fail_reply)
+    return
+
+def Carousel_reply_handle(event):
+    global state
+    text = event.message.text
+    textlist = text.split()
+    if (state == 1):
+        if (text == '算了'):
+            state = 0
+            line_bot_api.reply_message(event.reply_token,discard_reply)
+        elif (text == '列表' or text == '加入' or text == '刪除' or text == '指令'):
+            line_bot_api.reply_message(event.reply_token,please_return_reply)
+        elif (textlist[1] == '功能表'):
+            buttons_template_message = TemplateSendMessage(
+                    alt_text='功能表',
+                    template=ButtonsTemplate(
+                        title='功能表',
+                        text=textlist[0] + '版功能表',
+                        actions=[
+                            MessageAction(
+                                label='熱門文章',
+                                text= textlist[0] + ' ' +'版熱門文章'
+                            ),
+                            MessageAction(
+                                label='最新內容',
+                                text= textlist[0] + ' ' +'版最新內容'
+                            ),
+                            MessageAction(
+                                label='搜尋關鍵字',
+                                text= textlist[0] + ' ' +'版搜尋關鍵字'
+                            ),
+                            MessageAction(
+                                label='返回選單',
+                                text= '算了'
+                            ),
+                        ]
+                    )
+                )
+            state = 4
+            line_bot_api.reply_message(event.reply_token, buttons_template_message)
+    return
+        
+def searchhandler(event):
+    global state
+    global search_page
+    global search_board
+    text = event.message.text
+    
+    if (state == 5):
+        if (text == '算了'):
+            state = 0
+            line_bot_api.reply_message(event.reply_token,discard_reply)
+        else :
+            search_list = ''
+            count = 1
+            for i in range (0,30,1):
+                uurl = 'https://www.ptt.cc/bbs/' + search_board + '/index' + str(search_page-i) + '.html'
+                res = requests.get(uurl,headers = headers,cookies={'over18':'1'})
+                soup = bs(res.text,"html.parser")
+                datanum = soup.select("div.r-ent")
+                for ele in datanum:
+                    num_recv = ele.select("div.nrec")[0].text
+                    title = ele.select("div.title")[0].text.strip()
+                    if title.__contains__(text):
+                        search_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
+                        count +=1
+            if (search_list != ''): 
+                search_reply = TextSendMessage(text = search_list)
+                line_bot_api.reply_message(event.reply_token,search_reply)
+                return
+            else :
+                reply = TextSendMessage(text = '在 ' + search_board +' 版上找不到含有「 '+text+' 」的文章，請輸入另外的關鍵字' )
+                line_bot_api.reply_message(event.reply_token,reply)
+                return
+    return
+
+  
+def menuhandler(event):
+    global state
+    global search_page
+    global search_board
+    text = event.message.text
+    textlist = text.split()
+    
+    if (state == 4):
+        if (url_dict.get(textlist[0])!=None):
+
+            url = url_dict[textlist[0]]
+            res = requests.get(url,headers = headers)
+            soup = bs(res.text,"html.parser")
+            datanum = soup.select("div.r-ent")
+            data = soup.select("div.action-bar")
+
+            for ele in data :
+                d = ele.select("div.btn-group.btn-group-paging")
+                for k in d:
+                    f = k.select("a.btn.wide")[1]["href"]
+                    ret = int(re.findall(r"\d+",f)[0])
+
+            if (textlist[1] == '版熱門文章'):
+                hot_list = ''
+                count = 1
+                for i in range (0,10,1):
+                    uurl = 'https://www.ptt.cc/bbs/' + textlist[0] + '/index' + str(ret-i) + '.html'
+                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
+                    soup1 = bs(res1.text,"html.parser")
+                    datanum = soup1.select("div.r-ent")
+                    for ele in datanum:
+                        num_recv = ele.select("div.nrec")[0].text
+                        if (num_recv != '' and num_recv[0] != 'X' and (num_recv == '爆' or int(num_recv) > 40) and len(hot_list)< 4900):
+                            hot_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
+                            count +=1
+                hot_reply = TextSendMessage(text = hot_list)
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+                return
+            
+            elif (textlist[1] == '版最新內容'):
+                new_list = ''
+                count = 1
+                for i in range (0,10,1):
+                    uurl = 'https://www.ptt.cc/bbs/' + textlist[0] + '/index' + str(ret-i) + '.html'
+                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
+                    soup1 = bs(res1.text,"html.parser")
+                    datanum = soup1.select("div.r-ent")
+                    for ele in datanum:
+                        num_recv = ele.select("div.nrec")[0].text
+                        if count <=15 :
+                            new_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
+                            count +=1
+                new_reply = TextSendMessage(text = new_list)
+                line_bot_api.reply_message(event.reply_token,new_reply)
+                return
+            
+            elif (textlist[1] == '版搜尋關鍵字'):
+                state = 5
+                search_board = textlist[0]
+                search_page = ret
+                return
+                
+        elif(textlist[0] == '算了'):
+            state = 0
+            line_bot_api.reply_message(event.reply_token,discard_reply)
+            return
+        else:
+            line_bot_api.reply_message(event.reply_token,please_return_reply)
+            return
+    return
+    
 import os
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port)
