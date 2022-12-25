@@ -7,4 +7,5 @@ pandas
 SnowNLP 
 emoji 
 pyshorteners 
+lxml
 scipy
