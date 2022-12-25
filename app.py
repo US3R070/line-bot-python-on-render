@@ -5,8 +5,6 @@ import requests
 
 import re
 
-from transitions.extensions import GraphMachine
-
 from linebot import (
     LineBotApi, WebhookHandler
 )
