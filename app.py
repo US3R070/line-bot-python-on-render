@@ -387,7 +387,7 @@ def range_new_handler(event):
     if (state == 6): 
         try:
             number = int(text)
-            if (number <= 50 and number >0):
+            if (number <= 50 and number > 0):
                 new_list = ''
                 count = 1
                 i = 0
