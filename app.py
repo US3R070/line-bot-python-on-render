@@ -232,7 +232,7 @@ def Carousel_reply_handle(event):
                             ),
                             MessageAction(
                                 label='最新內容',
-                                text= textlist[0] + ' ' +'版最新內容，請輸入搜尋頁數:'
+                                text= textlist[0] + ' ' +'版最新內容，請輸入搜尋筆數:'
                             ),
                             MessageAction(
                                 label='搜尋關鍵字',
@@ -312,7 +312,7 @@ def menuhandler(event):
                 search_page = ret
                 return
             
-            elif (textlist[1] == '版最新內容，請輸入搜尋頁數:'):
+            elif (textlist[1] == '版最新內容，請輸入搜尋筆數:'):
                 state = 6
                 search_board = textlist[0]
                 search_page = ret
