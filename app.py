@@ -390,7 +390,8 @@ def range_new_handler(event):
             if (number <= 50 and number >0):
                 new_list = ''
                 count = 1
-                for i in range (0,10,1):
+                i = 0
+                while i<number:
                     uurl = 'https://www.ptt.cc/bbs/' + search_board + '/index' + str(search_page-i) + '.html'
                     res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
                     soup1 = bs(res1.text,"html.parser")
@@ -400,6 +401,7 @@ def range_new_handler(event):
                         if count <= number :
                             new_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
                             count +=1
+                    i+=1
                 new_reply = TextSendMessage(text = new_list)
                 line_bot_api.reply_message(event.reply_token,new_reply)
                 return  
