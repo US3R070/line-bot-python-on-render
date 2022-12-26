@@ -25,9 +25,9 @@ search_board = ''
 
 search_page = 0
 
-delete_reply = TextSendMessage(text = '請輸入要從選單移除的看板\n[Ex]:NBA,Gossiping,Stock...')
+delete_reply = TextSendMessage(text = '請輸入要從選單移除的看板\n[ Ex ]: NBA , Gossiping , Stock ...')
 
-join_reply = TextSendMessage(text = '請輸入要加到選單的看板\n[Ex]:NBA,Gossiping,Stock...')
+join_reply = TextSendMessage(text = '請輸入要加到選單的看板\n[ Ex ]: NBA , Gossiping , Stock ...')
 
 please_return_reply = TextSendMessage(text = '若要輸入其他指令，請先輸入「算了」放棄當前工作')
 
@@ -64,6 +64,7 @@ user_columns = [
                 ]
         
 state = 0
+range = 10
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -124,6 +125,10 @@ def handle_message(event):
         menuhandler(event)
     elif(state == 5):
         searchhandler(event)
+    elif(state == 6):
+        range_new_handler(event) 
+    elif (state == 7):
+        range_hot_handler(event)
 
     
     return
@@ -223,11 +228,11 @@ def Carousel_reply_handle(event):
                         actions=[
                             MessageAction(
                                 label='熱門文章',
-                                text= textlist[0] + ' ' +'版熱門文章'
+                                text= textlist[0] + ' ' +'版熱門文章，請輸入搜尋頁數:'
                             ),
                             MessageAction(
                                 label='最新內容',
-                                text= textlist[0] + ' ' +'版最新內容'
+                                text= textlist[0] + ' ' +'版最新內容，請輸入搜尋頁數:'
                             ),
                             MessageAction(
                                 label='搜尋關鍵字',
@@ -301,38 +306,16 @@ def menuhandler(event):
                     f = k.select("a.btn.wide")[1]["href"]
                     ret = int(re.findall(r"\d+",f)[0])
 
-            if (textlist[1] == '版熱門文章'):
-                hot_list = ''
-                count = 1
-                for i in range (0,10,1):
-                    uurl = 'https://www.ptt.cc/bbs/' + textlist[0] + '/index' + str(ret-i) + '.html'
-                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
-                    soup1 = bs(res1.text,"html.parser")
-                    datanum = soup1.select("div.r-ent")
-                    for ele in datanum:
-                        num_recv = ele.select("div.nrec")[0].text
-                        if (num_recv != '' and num_recv[0] != 'X' and (num_recv == '爆' or int(num_recv) > 40) and len(hot_list)< 4900):
-                            hot_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
-                            count +=1
-                hot_reply = TextSendMessage(text = hot_list)
-                line_bot_api.reply_message(event.reply_token,hot_reply)
+            if (textlist[1] == '版熱門文章，請輸入搜尋頁數:'):
+                state = 7
+                search_board = textlist[0]
+                search_page = ret
                 return
             
-            elif (textlist[1] == '版最新內容'):
-                new_list = ''
-                count = 1
-                for i in range (0,10,1):
-                    uurl = 'https://www.ptt.cc/bbs/' + textlist[0] + '/index' + str(ret-i) + '.html'
-                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
-                    soup1 = bs(res1.text,"html.parser")
-                    datanum = soup1.select("div.r-ent")
-                    for ele in datanum:
-                        num_recv = ele.select("div.nrec")[0].text
-                        if count <=15 :
-                            new_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
-                            count +=1
-                new_reply = TextSendMessage(text = new_list)
-                line_bot_api.reply_message(event.reply_token,new_reply)
+            elif (textlist[1] == '版最新內容，請輸入搜尋頁數:'):
+                state = 6
+                search_board = textlist[0]
+                search_page = ret
                 return
             
             elif (textlist[1] == '版搜尋關鍵字'):
@@ -349,6 +332,88 @@ def menuhandler(event):
             line_bot_api.reply_message(event.reply_token,please_return_reply)
             return
     return
+
+def range_hot_handler(event):
+    global state
+    global search_page
+    global search_board
+    global range
+    text = event.message.text
+
+    if (state == 7 ):
+        try: 
+            ran = int(text)
+            print(ran)
+            if (ran >= 0 and ran<100):
+                hot_list = ''
+                count = 1
+                i = 0
+                while i < ran:
+                    uurl = 'https://www.ptt.cc/bbs/' + search_board + '/index' + str(search_page-i) + '.html'
+                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
+                    soup1 = bs(res1.text,"html.parser")
+                    datanum = soup1.select("div.r-ent")
+                    for ele in datanum:
+                        num_recv = ele.select("div.nrec")[0].text
+                        if (num_recv != '' and num_recv[0] != 'X' and (num_recv == '爆' or int(num_recv) > 40) and len(hot_list)< 4900):
+                            hot_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
+                            count +=1
+                    i+=1
+                
+                hot_reply = TextSendMessage(text = hot_list)
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+                return
+            else:
+                hot_reply = TextSendMessage(text = '請輸入有效的數字 : 1-99')
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+                return
+            return
+        except ValueError:
+            if (text == '算了'):
+                state = 0
+                line_bot_api.reply_message(event.reply_token,discard_reply)
+                return
+            else:
+                hot_reply = TextSendMessage(text = '請輸入數字')
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+                return
+        
+def range_new_handler(event):
+    global state
+    global search_page
+    global search_board
+    global range
+    text = event.message.text
+    if (state == 6): 
+        try:
+            number = int(text)
+            if (number <= 50 and number >0):
+                new_list = ''
+                count = 1
+                for i in range (0,10,1):
+                    uurl = 'https://www.ptt.cc/bbs/' + search_board + '/index' + str(search_page-i) + '.html'
+                    res1 = requests.get(uurl,headers = headers,cookies={'over18':'1'})
+                    soup1 = bs(res1.text,"html.parser")
+                    datanum = soup1.select("div.r-ent")
+                    for ele in datanum:
+                        num_recv = ele.select("div.nrec")[0].text
+                        if count <= number :
+                            new_list += ( str(count) + '. <'+ num_recv + '> ' + ele.select("div.title")[0].text.strip() + '\nhttps://www.ptt.cc' + ele.select("div.title a")[0]["href"] + '\n\n')
+                            count +=1
+                new_reply = TextSendMessage(text = new_list)
+                line_bot_api.reply_message(event.reply_token,new_reply)
+                return  
+            else:
+                hot_reply = TextSendMessage(text = '請輸入有效的數字 : 1-50')
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+        except ValueError:
+            if (text == '算了'):
+                state = 0
+                line_bot_api.reply_message(event.reply_token,discard_reply)
+            else:
+                hot_reply = TextSendMessage(text = '請輸入數字')
+                line_bot_api.reply_message(event.reply_token,hot_reply)
+            return
     
 import os
 if __name__ == "__main__":
